@@ -8,6 +8,8 @@ class Module extends \yii\base\Module
 {
   public $db='i2db';
 
+  public $gman_server;
+
   public function init(){
     parent::init();
 
