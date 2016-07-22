@@ -39,9 +39,9 @@ class ConBidWatcher extends \yii\base\Component
         $p='#<tr>'.
             ' <td>\d+</td>'.
             ' <td>(?<notinum>\d{4}-\d{5})</td>'.
-            ' <td>[^<]*</td>'. //지역
-            ' <td> <a[^>]*>[^<]*</a> </td>'.
-            ' <td>[^<]*</td>'. //복수
+            ' <td>(?<local>[^<]*)</td>'. //지역
+            ' <td> <a[^>]*>(?<constnm>[^<]*)</a> </td>'. //공고명
+            ' <td>(?<multi>[^<]*)</td>'. //복수
             ' <td>[^<]*</td>'. //지문
             ' <td>[^<]*</td>'. //계약방법
             ' <td>(?<noticedt>\d{4}-\d{2}-\d{2})</td>'. //공고일자
@@ -51,6 +51,9 @@ class ConBidWatcher extends \yii\base\Component
           foreach($matches as $m){
             $data=[
               'notinum'=>trim($m['notinum']),
+              'local'=>trim($m['local']),
+              'constnm'=>trim($m['constnm']),
+              'multi'=>trim($m['multi']),
               'noticedt'=>trim($m['noticedt']),
               'status'=>trim($m['status']),
             ];
