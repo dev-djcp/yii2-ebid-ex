@@ -8,7 +8,7 @@ class BidWatcherPur extends BidWatcher
       ' <td>\d+</td>'.
       ' <td> (?<notinum>\d{4}-\d{5}) </td>'.
       ' <td>(?<local>[^<]*)</td>'.
-      ' <td> <a[^>]*>(?<constnm>[^<]*)</a> </td>'.
+      ' <td> <a[^>]*notino=(?<notino>\d{9})&bidno=(?<bidno>\d+)&bidseq=(?<bidseq>\d+)[^>]*>(?<constnm>[^<]*)</a> </td>'.
       ' <td>(?<multi>[^<]*)</td>'.
       ' <td>[^<]*</td>'. //레미콘
       ' <td>[^<]*</td>'.

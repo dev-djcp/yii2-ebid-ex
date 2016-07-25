@@ -21,7 +21,7 @@ abstract class Watcher extends \ebidex\Http
       ' <td>\d+</td>'.
       ' <td> (?<notinum>\d{4}-\d{5}) </td>'.
       ' <td>(?<local>[^<]*)</td>'.
-      ' <td> <a[^>]*>(?<constnm>[^<]*)</a> </td>'.
+      ' <td> <a[^>]*notino=(?<notino>\d{9})&bidno=(?<bidno>\d+)&bidseq=(?<bidseq>\d+)[^>]*>(?<constnm>[^<]*)</a> </td>'.
       ' <td>(?<multi>[^<]*)</td>'.
       ' <td>[^<]*</td>'.
       ' <td>(?<contract>[^<]*)</td>'.
@@ -68,6 +68,9 @@ abstract class Watcher extends \ebidex\Http
         $data=[
           'notinum'=>trim($m['notinum']),
           'local'=>trim($m['local']),
+          'notino'=>trim($m['notino']),
+          'bidno'=>trim($m['bidno']),
+          'bidseq'=>trim($m['bidseq']),
           'constnm'=>trim($m['constnm']),
           'multi'=>trim($m['multi']),
           'contract'=>trim($m['contract']),

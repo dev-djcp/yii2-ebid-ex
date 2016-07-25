@@ -8,12 +8,21 @@ class Http extends \yii\base\Component
   const URL_BID_LIST_CON='/ebid/jsps/ebid/const/bidNoti/bidNotiCompanyList.jsp';
   const URL_BID_LIST_SER='/ebid/jsps/ebid/serv/bidNoti/bidNotiCompanyList.jsp';
   const URL_BID_LIST_PUR='/ebid/jsps/ebid/buy/bidNoti/bidNotiCompanyList.jsp';
-  const URL_BID_DETAIL_CON='';
-  const URL_BID_DETAIL_SER='';
-  const URL_BID_DETAIL_PUR='';
-  const URL_SUC_LIST_CON='';
-  const URL_SUC_LIST_SER='';
-  const URL_SUC_LIST_PUR='';
+  const URL_BID_DETAIL_CON='/ebid/jsps/ebid/const/bidNoti/bidNotiCompanyRead.jsp';
+  const URL_BID_DETAIL_SER='/ebid/jsps/ebid/serv/bidNoti/bidNotiCompanyRead.jsp';
+  const URL_BID_DETAIL_PUR='/ebid/jsps/ebid/buy/bidNoti/bidNotiCompanyRead.jsp';
+  const URL_SUC_LIST_CON='/ebid/jsps/ebid/const/bidResult/bidResultList.jsp';
+  const URL_SUC_LIST_SER='/ebid/jsps/ebid/serv/bidResult/bidResultList.jsp';
+  const URL_SUC_LIST_PUR='/ebid/jsps/ebid/buy/bidResult/bidResultList.jsp';
+  const URL_SUC_DETAIL_CON='/ebid/jsps/ebid/const/bidResult/bidResultDetail.jsp';
+  const URL_SUC_DETAIL_CON_SUCCOM='/ebid/jsps/ebid/const/bidResult/bidResult.jsp';
+  const URL_SUC_DETAIL_CON_MULTI='/ebid/jsps/ebid/const/bidResult/bidResultNego3.jsp';
+  const URL_SUC_DETAIL_SER='/ebid/jsps/ebid/serv/bidResult/bidResultDetail.jsp';
+  const URL_SUC_DETAIL_SER_SUCCOM='/ebid/jsps/ebid/serv/bidResult/bidResult.jsp';
+  const URL_SUC_DETAIL_SER_MULTI='/ebid/jsps/ebid/serv/bidResult/bidResultNego3.jsp';
+  const URL_SUC_DETAIL_PUR='/ebid/jsps/ebid/buy/bidResult/bidResultDetail.jsp';
+  const URL_SUC_DETAIL_PUR_SUCCOM='/ebid/jsps/ebid/buy/bidResult/bidResult.jsp';
+  const URL_SUC_DETAIL_PUR_MULTI='/ebid/jsps/ebid/buy/bidResult/bidResultNego.jsp';
 
   public function init(){
     parent::init();
@@ -44,7 +53,7 @@ class Http extends \yii\base\Component
   }
 
   public static function match($pattern,$html,$label){
-    $pattern=str_replace(' ','\s*',$pattern);
+    $p=str_replace(' ','\s*',$pattern);
     $ret='';
     if(preg_match($p,$html,$m)){
       if(is_array($label)){
