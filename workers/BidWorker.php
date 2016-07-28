@@ -8,7 +8,7 @@ abstract class BidWorker extends Worker
 
   public function run(){
     $this->_html=$this->getDetail();
-    echo $this->_html;
+    //echo $this->_html;
 
     $this->match_notinum();
     $this->match_noticedt();
@@ -25,6 +25,7 @@ abstract class BidWorker extends Worker
     $this->match_contract();
     $this->match_convention();
     $this->match_attchd_lnk();
+    $this->match_multi_list();
     
     $this->_data['orign_lnk']=$this->get_orign_lnk();
     
@@ -106,10 +107,10 @@ abstract class BidWorker extends Worker
    */
   protected function match_multi_list(){
     $p='#<tr>'.
-       ' <td>[^<]</td>'.
+       ' <td>[^<]*</td>'.
        ' <td> <a[^>]*notino=(?<notino>\d{9})&bidno=(?<bidno>\d+)&bidseq=(?<bidseq>\d+)">(?<constnm>[^<]*)</a> </td>'.
-       ' <td>[^<]</td>'.
-       ' <td>[^<]</td>'.
+       ' <td>[^<]*</td>'.
+       ' <td>[^<]*</td>'.
        ' </tr>#';
     $p=str_replace(' ','\s*',$p);
     if(preg_match_all($p,$this->_html,$matches,PREG_SET_ORDER)){
