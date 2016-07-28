@@ -78,11 +78,16 @@ abstract class BidWorker extends Worker
   }
 
   protected function match_convention(){
+    $this->_data['convention']='0';
     $p='#<th> 공동수급 가능여부 </th> <td>(?<s>[^<]*)</td>#';
     $s=static::match($p,$this->_html,'s');
+    switch($s){
+      case '허용함':
+        $this->_data['convention']='2';
+        break;
+    }
     $p='#<th> 공동수급 의무여부 </th> <td(?<s>[^<]*)</td>#';
     $s=static::match($p,$this->_html,'s');
-    //todo
   }
 
   protected function match_attchd_lnk(){
@@ -100,6 +105,23 @@ abstract class BidWorker extends Worker
    * 발주내역
    */
   protected function match_multi_list(){
+    $p='#<tr>'.
+       ' <td>[^<]</td>'.
+       ' <td> <a[^>]*notino=(?<notino>\d{9})&bidno=(?<bidno>\d+)&bidseq=(?<bidseq>\d+)">(?<constnm>[^<]*)</a> </td>'.
+       ' <td>[^<]</td>'.
+       ' <td>[^<]</td>'.
+       ' </tr>#';
+    $p=str_replace(' ','\s*',$p);
+    if(preg_match_all($p,$this->_html,$matches,PREG_SET_ORDER)){
+      foreach($matches as $m){
+        $this->_data['multi_list'][]=[
+          'notino'=>$m['notino'],
+          'bidno'=>$m['bidno'],
+          'bidseq'=>$m['bidseq'],
+          'constnm'=>trim($m['constnm']),
+        ];
+      }
+    }
   }
 
   /**

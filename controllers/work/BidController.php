@@ -3,7 +3,10 @@ namespace ebidex\controllers\work;
 
 use yii\helpers\Json;
 use yii\helpers\Console;
+use yii\helpers\ArrayHelper;
 
+use ebidex\workers\BidWorkerCon;
+use ebidex\workers\BidWorkerSer;
 use ebidex\workers\BidWorkerPur;
 
 class BidController extends Controller

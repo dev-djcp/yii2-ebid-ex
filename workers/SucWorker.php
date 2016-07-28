@@ -18,6 +18,7 @@ abstract class SucWorker extends Worker
   public function run(){
     $this->_html=$this->getDetail();
 
+    $this->match_notinum();
     $this->match_yega();
     $this->match_selms();
 
@@ -40,8 +41,8 @@ abstract class SucWorker extends Worker
       if(!$this->succom_total_page) throw new \Exception('전체페이지를 찾을 수 없습니다.');
       $this->trigger('total_page',new \yii\base\Event);
       for($this->succom_page=1; $this->succom_page<=$this->succom_total_page; $this->succom_page++){
-        if($page>1){
-          $query['page']=$page;
+        if($this->succom_page>1){
+          $query['page']=$this->succom_page;
           $query['startnum']+=10;
           $query['endnum']+=10;
           $this->_html=$this->getSuccom($query);
@@ -82,6 +83,11 @@ abstract class SucWorker extends Worker
     return $this->_data;
   }
 
+  protected function match_notinum(){
+    $p='#<th> 공고번호 </th> <td> (?<s>\d{4}-\d{5}) </td>#';
+    $this->_data['notinum']=static::match($p,$this->_html,'s');
+  }
+
   protected function match_yega(){
     $p='#<th> 예정가격 </th> <td> (?<yega>\d{1,3}(,\d{3})*) </td>#';
     $yega=static::match($p,$this->_html,'yega');
@@ -90,12 +96,11 @@ abstract class SucWorker extends Worker
 
   protected function match_selms(){
     $p='#<th> 추첨예가 </th> </tr> <tr>'.
-       ' <td>'.
-       ' (?<p1>\d{1,3}(,\d{3})*)'.
-       ' (?<p2>\d{1,3}(,\d{3})*)'.
-       ' (?<p3>\d{1,3}(,\d{3})*)'.
-       ' (?<p4>\d{1,3}(,\d{3})*)'.
-       ' </td>#';
+       ' <td> (?<p1>\d{1,3}(,\d{3})*) </td>'.
+       ' <td> (?<p2>\d{1,3}(,\d{3})*) </td>'.
+       ' <td> (?<p3>\d{1,3}(,\d{3})*) </td>'.
+       ' <td> (?<p4>\d{1,3}(,\d{3})*) </td>'.
+       ' </tr>#';
     $a=static::match($p,$this->_html,['p1','p2','p3','p4']);
     if(is_array($a)){
       foreach($a as $v){

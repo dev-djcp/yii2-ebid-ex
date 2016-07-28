@@ -1,14 +1,14 @@
 <?php
 namespace ebidex\models;
 
-class BidKey extends \yii\db\ActiveRecord
+class BidKey extends \i2\models\BidKey
 {
-  public static function tableName(){
-    return 'bid_key';
-  }
-
   public static function getDb(){
     return \ebidex\Module::getInstance()->db;
+  }
+
+  public function getBidValue(){
+    return $this->hasOne(BidValue::className(),['bidid'=>'bidid']);
   }
 }
 
