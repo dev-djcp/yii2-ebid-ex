@@ -9,7 +9,10 @@ abstract class BidWorker extends Worker
   public function run(){
     $this->_html=$this->getDetail();
     //echo $this->_html;
+    $this->_data['opt']=0;
 
+    $this->match_bidtype();
+    $this->match_bidview();
     $this->match_notinum();
     $this->match_noticedt();
     $this->match_constnm();
@@ -26,10 +29,18 @@ abstract class BidWorker extends Worker
     $this->match_convention();
     $this->match_attchd_lnk();
     $this->match_multi_list();
+    $this->match_opt();
     
     $this->_data['orign_lnk']=$this->get_orign_lnk();
+    $this->_data['notinum_ex']=$this->bidno;
     
     return $this->_data;
+  }
+
+  protected function match_opt(){
+    if($this->_data['multispare'] and ($this->_data['opt']&pow(2,15))==0){
+      $this->_data['opt']+=pow(2,15); //복수예가선발표
+    }
   }
 
   protected function match_notinum(){
@@ -96,7 +107,7 @@ abstract class BidWorker extends Worker
     $p='/getFileDownload\("(?<no>\d+)","(?<fname>[^>]*)"\);/';
     if(preg_match_all($p,$this->_html,$matches,PREG_SET_ORDER)){
       foreach($matches as $m){
-        $files[]=$m['fname'].'#'.'/path='.$m['no'].'&pathDiv=NOTI&pathGgNo='.$m['no'].'&pathFileNm='.$m['fname'];
+        $files[]=$m['fname'].'#'.'("path='.$m['no'].'&pathDiv=NOTI&pathGgNo='.$m['no'].'&pathFileNm='.$m['fname'].'")';
       }
     }
     $this->_data['attchd_lnk']=join('|',$files);

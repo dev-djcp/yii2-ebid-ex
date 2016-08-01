@@ -19,5 +19,13 @@ class BidWorkerSer extends BidWorker
   protected function get_orign_lnk(){
     return 'http://ebid.ex.co.kr/ebid/jsps/ebid/serv/bidNoti/bidNotiCompanyRead.jsp?notino='.$this->notino.'&bidno='.$this->bidno.'&bidseq='.$this->bidseq.'&remicon=null';
   }
+
+  protected function match_bidtype(){
+    $this->_data['bidtype']='ser';
+  }
+
+  protected function match_bidview(){
+    $this->_data['bidview']='ser';
+  }
 }
 
