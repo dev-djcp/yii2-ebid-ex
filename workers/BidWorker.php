@@ -151,11 +151,11 @@ abstract class BidWorker extends Worker
   protected function match_multispare(){
     $multispares=[];
     $p='#<tr>'.
-       ' <td> (?<m1>\d{1,3}(,\d{3})*) </td>'.
-       ' <td> (?<m2>\d{1,3}(,\d{3})*) </td>'.
-       ' <td> (?<m3>\d{1,3}(,\d{3})*) </td>'.
-       ' <td> (?<m4>\d{1,3}(,\d{3})*) </td>'.
-       ' <td> (?<m5>\d{1,3}(,\d{3})*) </td>'.
+       ' <td> (?<m1>\d{1,3}(,\d{3})*(\.\d*)) </td>'.
+       ' <td> (?<m2>\d{1,3}(,\d{3})*(\.\d*)) </td>'.
+       ' <td> (?<m3>\d{1,3}(,\d{3})*(\.\d*)) </td>'.
+       ' <td> (?<m4>\d{1,3}(,\d{3})*(\.\d*)) </td>'.
+       ' <td> (?<m5>\d{1,3}(,\d{3})*(\.\d*)) </td>'.
        ' </tr>#';
     $p=str_replace(' ','\s*',$p);
     if(preg_match_all($p,$this->_html,$matches,PREG_SET_ORDER)){

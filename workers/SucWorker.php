@@ -132,7 +132,7 @@ abstract class SucWorker extends Worker
         $this->_data['succoms'][$row['seq']]=$row;
         switch($row['etc']){
           case '낙찰':
-          case '적격심사':
+          case '적격심사대상':
           case '낙찰예정':
             $this->_data['success1']=$row['success'];
             $this->_data['officenm1']=$row['officenm'];

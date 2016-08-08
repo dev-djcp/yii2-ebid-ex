@@ -43,11 +43,18 @@ class SucController extends Controller
 
   public function run($workload,$className){
     try{
+      $notinum_ex=$workload['bidno'];
+
       if(isset($workload['bidproc']) and ArrayHelper::isIn($workload['bidproc'],['유찰','재공고'])){
-        $bidkey=BidKey::find()->where("whereis='08' and notinum like '{$workload['notinum']}%'")
-          ->orderBy('bidid desc')->limit(1)->one();
+        $query=BidKey::find()->where(['whereis'=>'08','notinum'=>$data['notinum']]);
+        if($notinum_ex==1){
+          $query->andWhere("notinum_ex='' or notinum_ex='1'");
+        }else{
+          $query->andWhere(['notinum_ex'=>$notinum_ex]);
+        }      
+        $bidkey=$query->orderBy('bidid desc')->limit(1)->one();
         if($bidkey!==null and $bidkey->bidproc!=='F'){
-          $this->gman_client->doBackground('i2_auto_suc',Json::encode([
+          $this->gman_client->doBackground('i2_auto_suc_test',Json::encode([
             'bidid'=>$bidkey->bidid,
             'bidproc'=>'F',
           ]));
@@ -75,8 +82,13 @@ class SucController extends Controller
       });
       $data=$worker->run();
 
-      $bidkey=BidKey::find()->where("whereis='08' and notinum like '{$data['notinum']}%'")
-        ->orderBy('bidid desc')->limit(1)->one();
+      $query=BidKey::find()->where(['whereis'=>'08','notinum'=>$data['notinum']]);
+      if($notinum_ex==1){
+        $query->andWhere("notinum_ex='' or notinum_ex='1'");
+      }else{
+        $query->andWhere(['notinum_ex'=>$notinum_ex]);
+      }      
+      $bidkey=$query->orderBy('bidid desc')->limit(1)->one();
       if($bidkey===null) return;
       $bidvalue=$bidkey->bidValue;
       $data['multispare']=$bidvalue->multispare;
@@ -92,7 +104,7 @@ class SucController extends Controller
       }
       $data['bidid']=$bidkey->bidid;
       $data['bidproc']='S';
-      $this->gman_client->doBackground('i2_auto_suc',Json::encode($data));
+      $this->gman_client->doBackground('i2_auto_suc_test',Json::encode($data));
       $this->stdout2("    >>> $bidkey->bidid ($bidkey->bidproc) 예가:{$data['yega']} 참여수:{$data['innum']} %g개찰%n\n");
     }
     catch(\Exception $e){

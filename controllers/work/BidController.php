@@ -4,6 +4,7 @@ namespace ebidex\controllers\work;
 use yii\helpers\Json;
 use yii\helpers\Console;
 use yii\helpers\ArrayHelper;
+use yii\helpers\VarDumper;
 
 use ebidex\BidFile;
 use ebidex\workers\BidWorkerCon;
@@ -14,6 +15,8 @@ use ebidex\models\BidModifyCheck;
 
 class BidController extends Controller
 {
+  public $i2_gman_func='i2_auto_bid_test';
+
   public function actionIndex(){
     //공사
     $this->gman_worker->addFunction('ebidex_work_bid_con',function($job){
@@ -50,49 +53,91 @@ class BidController extends Controller
         'bidseq'=>$workload['bidseq'],
       ]);
       $data=$worker->run();
+      $data['whereis']='08';
+      $data['orgcode_y']=$workload['bidseq']; //차수
 
       if(isset($workload['changeConstnm']) and isset($workload['constnm'])){
         $data['constnm']=$workload['constnm'];
       }
 
-      $bidkey=BidKey::find()->where([
-        'whereis'=>'08',
-        'notinum'=>$data['notinum'],
-        'notinum_ex'=>$data['notinum_ex'],
-      ])->orderBy('bidid desc')->limit(1)->one();
-      if($bidkey===null){
-        //new
-        list(,$bno)=explode('-',$data['notinum']);
-        $data['bidid']=sprintf('%6sEX%5s%-02s-00-00-01',date('ymd'),$bno,$workload['bidno']);
+      if($workload['bidproc']=='취소공고'){
+        $query=BidKey::find()->where([
+          'whereis'=>'08',
+          'notinum'=>$data['notinum'],
+        ]);
+        if($data['notinum_ex']==1){
+          $query->andWhere("notinum_ex='' or notinum_ex='1'");
+        }else{
+          $query->andWhere(['notinum_ex'=>$data['notinum_ex']]);
+        }
+        $bidkey=$query->orderBy('bidid desc')->limit(1)->one();
+        if($bidkey!==null and $bidkey->bidproc!='C'){
+          list($a,$b,$c,$d)=explode('-',$bidkey->bidid);
+          $b=sprintf('%02s',intval($b)+1);
+          $data['bidid']="$a-$b-$c-$d";
+          $data['bidproc']='C';
+          $this->gman_client->doBackground($this->i2_gman_func,Json::encode($data));
+          $this->stdout2("   %g>>> do {$this->i2_gman_func} {$data['bidid']} {$data['bidproc']}%n\n");
+        }
+      }
+      else if($workload['bidproc']=='공고중'){
+        $query=BidKey::find()->where([
+          'whereis'=>'08',
+          'notinum'=>$data['notinum'],
+        ]);
+        if($data['notinum_ex']==1){
+          $query->andWhere("notinum_ex='' or notinum_ex='1'");
+        }else{
+          $query->andWhere(['notinum_ex'=>$data['notinum_ex']]);
+        }
+        $bidkey=$query->orderBy('bidid desc')->limit(1)->one();
+        if($bidkey===null){
+          //new
+          list(,$bno)=explode('-',$data['notinum']);
+          $data['bidid']=sprintf('%6sEX%5s%-02s-00-00-01',date('ymd'),$bno,$workload['bidno']);
+          $data['bidproc']='B';
+          $this->gman_client->doBackground($this->i2_gman_func,Json::encode($data));
+          $this->stdout2("   %g>>> do {$this->i2_gman_func} {$data['bidid']} {$data['bidproc']}%n\n");
+        }else{
+          if($workload['bidseq']>1 and $bidkey->orgcode_y!=$workload['bidseq']){ //정정공고
+            list($a,$b,$c,$d)=explode('-',$bidkey->bidid);
+            $b=sprintf('%02s',intval($b)+1);
+            $data['bidid']="$a-$b-$c-$d";
+            $data['bidproc']='M';
+            $this->gman_client->doBackground($this->i2_gman_func,Json::encode($data));
+            $this->stdout2(" %g> do {$this->i2_gman_func} {$data['bidid']} {$data['bidproc']}%n\n");
+          }
+        }
       }
 
-      print_r($data);
+      \Yii::info(VarDumper::dumpAsString($data),'ebidex');
 
       //-------------------------------
       // 임의수정 check
       //-------------------------------
-      $bidid=($bidkey===null)?$data['bidid']:$bidkey->bidid;
-      $bidcheck=BidModifyCheck::findOne($bidid);
-      if($bidcheck===null) $bidcheck=new BidModifyCheck(['bidid'=>$bidid]);
-      $bid_hash=md5(join('',$data));
-      $noticeDoc=BidFile::findNoticeDoc($data['attchd_lnk']);
-      if($noticeDoc!==null and $noticeDoc->download()){
-        $file_hash=md5_file($noticeDoc->saveDir.'/'.$noticeDoc->savedName);
-        $noticeDoc->remove();
+      if($bidkey!==null){
+        $bidcheck=BidModifyCheck::findOne($bidkey->bidid);
+        if($bidcheck===null) $bidcheck=new BidModifyCheck(['bidid'=>$bidkey->bidid]);
+        $bid_hash=md5(join('',$data));
+        $noticeDoc=BidFile::findNoticeDoc($data['attchd_lnk']);
+        if($noticeDoc!==null and $noticeDoc->download()){
+          $file_hash=md5_file($noticeDoc->saveDir.'/'.$noticeDoc->savedName);
+          $noticeDoc->remove();
+        }
+        if(!empty($bidcheck->bid_hash) and $bidcheck->bid_hash!=$bid_hash){
+          $this->stdout(" > check : bid_hash diff\n",Console::FG_YELLOW);
+          $this->sendMessage("도로공사 공고정보 확인필요! [{$data['notinum']}]");
+        }
+        else if(!empty($bidcheck->file_hash) and $bidcheck->file_hash!=$file_hash){
+          $this->stdout(" > check : file_hash diff\n",Console::FG_YELLOW);
+          $this->sendMessage("도로공사 공고원문 확인필요! [{$data['notinum']}]");
+        }
+        $bidcheck->bid_hash=$bid_hash;
+        $bidcheck->file_hash=$file_hash;
+        $bidcheck->check_at=time();
+        $bidcheck->save();
+        $this->stdout2(" %b>>> bid modify check%n\n");
       }
-      if(!empty($bidcheck->bid_hash) and $bidcheck->bid_hash!=$bid_hash){
-        $this->stdout(" > check : bid_hash diff\n",Console::FG_YELLOW);
-        $this->sendMessage("도로공사 공고정보 확인필요! [{$data['notinum']}]");
-      }
-      else if(!empty($bidcheck->file_hash) and $bidcheck->file_hash!=$file_hash){
-        $this->stdout(" > check : file_hash diff\n",Console::FG_YELLOW);
-        $this->sendMessage("도로공사 공고원문 확인필요! [{$data['notinum']}]");
-      }
-      $bidcheck->bid_hash=$bid_hash;
-      $bidcheck->file_hash=$file_hash;
-      $bidcheck->check_at=time();
-      $bidcheck->save();
-      print_r($bidcheck->attributes);
 
       //----------------------------
       // 복수공고처리
@@ -109,6 +154,7 @@ class BidController extends Controller
               'bidseq'=>$next['bidseq'],
               'constnm'=>$next['constnm'],
               'changeConstnm'=>'1',
+              'bidproc'=>$workload['bidproc'],
             ]));
             break;
           }
