@@ -44,7 +44,7 @@ abstract class BidWorker extends Worker
   }
 
   protected function match_notinum(){
-    $p='#<th> (취소)?공고번호 </th> <td> (?<notinum>\d{4}-\d{5}) </td>#';
+    $p='#<th> (취소)?공고번호 </th> <td> (?<notinum>\d{4}-\d{5})[^<]*</td>#';
     $this->_data['notinum']=static::match($p,$this->_html,'notinum');
   }
 

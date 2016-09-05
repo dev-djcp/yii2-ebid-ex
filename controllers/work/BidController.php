@@ -71,16 +71,16 @@ class BidController extends Controller
           $query->andWhere(['notinum_ex'=>$data['notinum_ex']]);
         }
         $bidkey=$query->orderBy('bidid desc')->limit(1)->one();
-        if($bidkey!==null and $bidkey->bidproc!='C'){
+        if($bidkey!==null and $bidkey->bidproc!='C' and $bidkey->orgcode_y<=$workload['bidseq']){
           list($a,$b,$c,$d)=explode('-',$bidkey->bidid);
           $b=sprintf('%02s',intval($b)+1);
           $data['bidid']="$a-$b-$c-$d";
           $data['bidproc']='C';
-          $this->gman_client->doBackground($this->i2_gman_func,Json::encode($data));
+          $this->gman_client->doNormal($this->i2_gman_func,Json::encode($data));
           $this->stdout2("   %g>>> do {$this->i2_gman_func} {$data['bidid']} {$data['bidproc']}%n\n");
         }
       }
-      else if($workload['bidproc']=='공고중'){
+      else if($workload['bidproc']=='공고중' or $workload['bidproc']=='정정공고중'){
         $query=BidKey::find()->where([
           'whereis'=>'08',
           'notinum'=>$data['notinum'],
@@ -96,7 +96,7 @@ class BidController extends Controller
           list(,$bno)=explode('-',$data['notinum']);
           $data['bidid']=sprintf('%6sEX%5s%-02s-00-00-01',date('ymd'),$bno,$workload['bidno']);
           $data['bidproc']='B';
-          $this->gman_client->doBackground($this->i2_gman_func,Json::encode($data));
+          $this->gman_client->doNormal($this->i2_gman_func,Json::encode($data));
           $this->stdout2("   %g>>> do {$this->i2_gman_func} {$data['bidid']} {$data['bidproc']}%n\n");
         }else{
           if($workload['bidseq']>1 and $bidkey->orgcode_y!=$workload['bidseq']){ //정정공고
@@ -104,7 +104,7 @@ class BidController extends Controller
             $b=sprintf('%02s',intval($b)+1);
             $data['bidid']="$a-$b-$c-$d";
             $data['bidproc']='M';
-            $this->gman_client->doBackground($this->i2_gman_func,Json::encode($data));
+            $this->gman_client->doNormal($this->i2_gman_func,Json::encode($data));
             $this->stdout2(" %g> do {$this->i2_gman_func} {$data['bidid']} {$data['bidproc']}%n\n");
           }
         }
@@ -163,6 +163,7 @@ class BidController extends Controller
     }catch(\Exception $e){
       $this->stdout("$e\n",Console::FG_RED);
       \Yii::error($e,'ebidex');
+      $this->sendMessage('ebidex:'.$e->getMessage());
     }
     $this->stdout(sprintf("[%s] Peak memory usage: %sMb\n",
       date('Y-m-d H:i:s'),

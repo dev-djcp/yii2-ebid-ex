@@ -55,12 +55,12 @@ class WatchController extends \yii\console\Controller
       $bidcheck=BidModifyCheck::findOne($bidkey->bidid);
       if($bidcheck===null){
         $this->stdout2(" %yCHECK%n");
-        $this->gman_client->doBackground('ebidex_work_bid_'.$bidkey->bidtype,Json::encode($row));
+        $this->gman_client->doNormal('ebidex_work_bid_'.$bidkey->bidtype,Json::encode($row));
       }else{
         $diff=tiem()-$bidcheck->check_at;
         if($diff>=60*60*1){
           $this->stdout2(" %yCHECK%n");
-          $this->gman_client->doBackground('ebidex_work_bid_'.$bidkey->bidtype,Json::encode($row));
+          $this->gman_client->doNormal('ebidex_work_bid_'.$bidkey->bidtype,Json::encode($row));
         }
         sleep(3);
       }
@@ -79,71 +79,85 @@ class WatchController extends \yii\console\Controller
           $this->stdout2("도로> %y[공사입찰]%n {$row['notinum']} {$row['constnm']} ({$row['local']},{$row['multi']},{$row['bidproc']})");
           $bidkey=$this->findBidKey($row);
           if($bidkey!==null){
-            if($row['bidproc']=='취소공고' and $bidkey->bidproc!=='C'){
-              $this->gman_client->doBackground('ebidex_work_bid_con',Json::encode($row));
-              sleep(3);
+            if($row['bidproc']=='취소공고' and $bidkey->bidproc!=='C' and $bidkey->orgcode_y<=$row['bidseq']){
+              $this->gman_client->doNormal('ebidex_work_bid_con',Json::encode($row));
+              sleep(1);
               return;
             }
             else if($row['bidseq']>1 and $bidkey->orgcode_y!=$row['bidseq']){
-              $this->gman_client->doBackground('ebidex_work_bid_con',Json::encode($row));
-              sleep(3);
+              $this->stdout("\n > 정정공고 처리요청 : ebidex_work_bid_con\n",Console::FG_GREEN);
+              $this->gman_client->doNormal('ebidex_work_bid_con',Json::encode($row));
+              sleep(1);
               return;
             }
             $this->bidcheck($bidkey,$row);
             $this->stdout("\n");
             return;
           }
+          else if($row['bidproc']=='취소공고'){
+            $this->stdout2(" %bPASS%n\n");
+            return;
+          }
           $this->stdout2(" %yNEW%n\n");
-          $this->gman_client->doBackground('ebidex_work_bid_con',Json::encode($row));
-          sleep(5);
+          $this->gman_client->doNormal('ebidex_work_bid_con',Json::encode($row));
+          sleep(1);
         });
 
         $ser->watch($start,$end,function($row){
           $this->stdout2("도로> %g[용역입찰]%n {$row['notinum']} {$row['constnm']} ({$row['local']},{$row['multi']},{$row['bidproc']})");
           $bidkey=$this->findBidKey($row);
           if($bidkey!==null){
-            if($row['bidproc']=='취소공고' and $bidkey->bidproc!=='C'){
-              $this->gman_client->doBackground('ebidex_work_bid_ser',Json::encode($row));
-              sleep(3);
+            if($row['bidproc']=='취소공고' and $bidkey->bidproc!=='C' and $bidkey->orgcode_y<=$row['bidseq']){
+              $this->gman_client->doNormal('ebidex_work_bid_ser',Json::encode($row));
+              sleep(1);
               return;
             }
             //정정
             else if($row['bidseq']>1 and $bidkey->orgcode_y!=$row['bidseq']){
-              $this->gman_client->doBackground('ebidex_work_bid_con',Json::encode($row));
-              sleep(3);
+              $this->stdout("\n > 정정공고 처리요청 : ebidex_work_bid_ser\n",Console::FG_GREEN);
+              $this->gman_client->doNormal('ebidex_work_bid_ser',Json::encode($row));
+              sleep(1);
               return;
             }
             $this->bidcheck($bidkey,$row);
             $this->stdout("\n");
             return;
           }
+          else if($row['bidproc']=='취소공고'){
+            $this->stdout2(" %bPASS%n\n");
+            return;
+          }
           $this->stdout2(" %yNEW%n\n");
-          $this->gman_client->doBackground('ebidex_work_bid_ser',Json::encode($row));
-          sleep(5);
+          $this->gman_client->doNormal('ebidex_work_bid_ser',Json::encode($row));
+          sleep(1);
         });
 
         $pur->watch($start,$end,function($row){
           $this->stdout2("도로> %b[구매입찰]%n {$row['notinum']} {$row['constnm']} ({$row['local']},{$row['multi']},{$row['bidproc']})");
           $bidkey=$this->findBidKey($row);
           if($bidkey!==null){
-            if($row['bidproc']=='취소공고' and $bidkey->bidproc!=='C'){
-              $this->gman_client->doBackground('ebidex_work_bid_pur',Json::encode($row));
-              sleep(3);
+            if($row['bidproc']=='취소공고' and $bidkey->bidproc!=='C' and $bidkey->orgcode_y<=$row['bidseq']){
+              $this->gman_client->doNormal('ebidex_work_bid_pur',Json::encode($row));
+              sleep(1);
               return;
             }
             else if($row['bidseq']>1 and $bidkey->orgcode_y!=$row['bidseq']){
-              $this->gman_client->doBackground('ebidex_work_bid_pur',Json::encode($row));
-              $this->stdout(" > 정정공고 처리요청 : ebidex_work_bid_pur\n",Console::FG_GREEN);
-              sleep(3);
+              $this->stdout("\n > 정정공고 처리요청 : ebidex_work_bid_pur\n",Console::FG_GREEN);
+              $this->gman_client->doNormal('ebidex_work_bid_pur',Json::encode($row));
+              sleep(1);
               return;
             }
             $this->bidcheck($bidkey,$row);
             $this->stdout("\n");
             return;
           }
+          else if($row['bidproc']=='취소공고'){
+            $this->stdout2(" %bPASS%n\n");
+            return;
+          }
           $this->stdout2(" %yNEW%n\n");
-          $this->gman_client->doBackground('ebidex_work_bid_pur',Json::encode($row));
-          sleep(5);
+          $this->gman_client->doNormal('ebidex_work_bid_pur',Json::encode($row));
+          sleep(1);
         });
       }catch(\Exception $e){
         $this->stdout("$e\n",Console::FG_RED);
@@ -183,8 +197,8 @@ class WatchController extends \yii\console\Controller
             return;
           }
           $this->stdout2(" %yNEW%n\n");
-          sleep(5);
-          $this->gman_client->doBackground('ebidex_work_suc_con',Json::encode($row));
+          sleep(1);
+          $this->gman_client->doNormal('ebidex_work_suc_con',Json::encode($row));
         });
 
         $ser->watch($start,$end,function($row){
@@ -205,8 +219,8 @@ class WatchController extends \yii\console\Controller
             return;
           }
           $this->stdout2(" %yNEW%n\n");
-          sleep(5);
-          $this->gman_client->doBackground('ebidex_work_suc_ser',Json::encode($row));
+          sleep(1);
+          $this->gman_client->doNormal('ebidex_work_suc_ser',Json::encode($row));
         });
 
         $pur->watch($start,$end,function($row){
@@ -226,8 +240,8 @@ class WatchController extends \yii\console\Controller
             return;
           }
           $this->stdout2(" %yNEW%n\n");
-          $this->gman_client->doBackground('ebidex_work_suc_pur',Json::encode($row));
-          sleep(5);
+          $this->gman_client->doNormal('ebidex_work_suc_pur',Json::encode($row));
+          sleep(1);
         });
       }catch(\Exception $e){
         $this->stdout("$e\n",Console::FG_RED);
